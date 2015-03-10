@@ -1,0 +1,51 @@
+plotlevel = 1;
+model = 2;
+tincr = 0.0005; time increment (s) in force and EMG summation array
+N = 120; number of motor units
+RR = 40; range of recruitment thresholds
+a = log(RR)/N;
+i = 1:N;
+RET = exp(a*i); recruitment excitation threshold of each unit
+	(exponential curve from 1 to 40)
+exc = [RET ceil(RET(N) + .5):100; creats vector of excitations for each MU threshold
+	(continues RET to max excitation)
+steps = length(exc); number of excitation levels in exc
+murate = firing rates at each excitation level for each MU
+	(steps rows, N columns)
+RP = 100; range of peak twitch amplitudes
+b = log(RP)/N;
+P = exp(b*i); peak twitch force of each motor unit
+RT = 3; range of twitch contraction times
+Tlong = 0.09; longest motor unit contraction time
+c = log(RP)/log(RT);
+Tc = Tlong*(1./P).^(1/c); contraction time of each motor unit
+stimorder = randperm(N); randomizes order of recruitment by stimulation
+smuapnorm = tsteps.*exp(-(tsteps.^)/lambda^2); ????!?!??!?
+smuap = scaled motor unit action potentials
+	(muapduration = 0.012)
+	(tsteps = -muapduration/2:tincr:muapduration/2)
+	(aplength = size(tsteps))
+	(N rows, aplength columns)
+	(peak twitch force * smuapnorm)
+
+
+Exc = [0 0.05:0.05:1.0]; fraction of full excitation
+Nexc = length(Exc);
+
+[Fvol Fcomb Evol Evolcomb Evolstim] = MNPforce4(tincr,U,Nstim,plotlevel,exc,steps,murate,P,Tc,RET,N,smuap,stimorder);
+
+
+tstop = 3; end of simulation (s)
+t = 0:tincr:tstop;
+totsamp = length(t);
+excitation = U*max(exc); fraction of the MVC exc
+for k = 1:N
+if RET(k)<excitation;
+active(k) = true
+if active(k):
+istart = floor(texc(j)/tincr);
+for i = istart:totsamp:
+smuforce(k,i) =  smuforce(k,i) + scale*(t(i) - t(istart))*twitch(i - istart + 1);
+	(N rows, totsamp columns)
+mnpforce = sum(smuforce,1)
+Fvol = mean(mnpforce(ivol(1):ivol(2)));
